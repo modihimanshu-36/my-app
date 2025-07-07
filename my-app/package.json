@@ -1,0 +1,22 @@
+{
+  "name": "my-app",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "npx karma start"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@dojo/loader": "^2.0.0"
+  },
+  "devDependencies": {
+    "karma": "^6.4.2",
+    "karma-chrome-launcher": "^3.2.0",
+    "karma-qunit": "^4.1.2",
+    "qunit": "^2.19.4",
+    "@open-wc/karma-esm": "^3.0.0"
+  }
+}
