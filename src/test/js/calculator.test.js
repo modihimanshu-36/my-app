@@ -10,7 +10,7 @@ QUnit.test('add()', function(assert) {
 });
 
 QUnit.test('subtract()', function(assert) {
-    assert.strictEqual(Calculator.subtract(5, 3), 2, '5 - 3 = 2');
+    assert.strictEqual(Calculator.subtract(4, 2), 2, '5 - 3 = 2');
     assert.strictEqual(Calculator.subtract(0, 0), 0, '0 - 0 = 0');
 });
 
