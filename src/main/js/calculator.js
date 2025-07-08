@@ -2,7 +2,7 @@
 
 export class Calculator {
     static add(a, b) {
-        console.log('something ifdskjghs added')
+        console.log('something added')
         return a + b;
     }
 
