@@ -63,3 +63,15 @@ jobs:
             -H "Authorization: Bearer $GH_TOKEN" \
             https://api.github.com/repos/$REPO/dispatches \
             -d "{\"event_type\": \"$EVENT_TYPE\", \"client_payload\": $PAYLOAD}"
+
+      - name: Set qual-check status to pending
+        env:
+          GH_TOKEN: ${{ secrets.STATUS_TOKEN }}  # The same PAT with commit status permission on my-app
+          SHA: ${{ github.event.pull_request.head.sha }}
+          REPO: modihimanshu-36/my-app
+        run: |
+          curl -X POST \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/$REPO/statuses/$SHA \
+            -d '{"state":"pending","context":"qual-check","description":"Qual workflow running"}' 
