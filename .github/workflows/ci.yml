@@ -44,21 +44,6 @@ jobs:
       - name: Install dependencies and run tests
         run: mvn clean verify
 
-      # - name: Trigger qual repo tests
-      #   if: success()  # Only run if previous steps succeeded
-      #   uses: peter-evans/repository-dispatch@v3
-      #   with:
-      #     token: ${{ secrets.QUAL_TOKEN }}
-      #     repository: modihimanshu-36/qual         # <--- CHANGE THIS!
-      #     event-type: run-qual-tests
-      #     client-payload: |
-      #       {
-      #         "pr_branch": "${{ github.head_ref }}",
-      #         "repo": "${{ github.repository }}",
-      #         "pr_sha": "${{ github.sha }}",
-      #         "feature_tag": "feature:my-app"
-      #       }
-
       - name: Trigger qual repo tests (via GitHub API)
         if: success()
         env:
