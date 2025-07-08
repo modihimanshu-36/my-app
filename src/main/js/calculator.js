@@ -15,7 +15,7 @@ export class Calculator {
 
     static divide(a, b) {
         if (b === 0) {
-            throw new Error("Divide by zero");
+            throw new Error("Divide by zero and then");
         }
         return a / b;
     }
