@@ -64,14 +64,41 @@ jobs:
             https://api.github.com/repos/$REPO/dispatches \
             -d "{\"event_type\": \"$EVENT_TYPE\", \"client_payload\": $PAYLOAD}"
 
-      - name: Set qual-check status to pending
+
+      - name: Wait for child process to complete
         env:
-          GH_TOKEN: ${{ secrets.STATUS_TOKEN }}  # The same PAT with commit status permission on my-app
-          SHA: ${{ github.event.pull_request.head.sha }}
-          REPO: modihimanshu-36/my-app
+            GH_TOKEN: ${{ secrets.QUAL_TOKEN }}
+            REPO: modihimanshu-36/qual
         run: |
-          curl -X POST \
-            -H "Authorization: Bearer $GH_TOKEN" \
-            -H "Accept: application/vnd.github+json" \
-            https://api.github.com/repos/$REPO/statuses/$SHA \
-            -d '{"state":"pending","context":"qual-check","description":"Qual workflow running"}' 
+            for i in {1..5}; do
+              STATUS=$(curl -s -H "Accept: application/vnd.github+json" \
+                -H "Authorization: Bearer $GH_TOKEN" \
+                https://api.github.com/repos/$REPO/actions/runs \
+                | jq -r '.workflow_runs[] | select(.head_branch=="${{ github.head_ref }}") | .conclusion')
+              
+              if [[ "$STATUS" == "success" ]]; then
+                echo "Child process succeeded."
+                exit 0
+              elif [[ "$STATUS" == "failure" ]]; then
+                echo "Child process failed."
+                exit 1
+              fi
+              
+              echo "Waiting for child process to complete..."
+              sleep 5
+            done
+        
+            echo "Timed out waiting for child process."
+            exit 1
+
+      # - name: Set qual-check status to pending
+      #   env:
+      #     GH_TOKEN: ${{ secrets.STATUS_TOKEN }}  # The same PAT with commit status permission on my-app
+      #     SHA: ${{ github.event.pull_request.head.sha }}
+      #     REPO: modihimanshu-36/my-app
+      #   run: |
+      #     curl -X POST \
+      #       -H "Authorization: Bearer $GH_TOKEN" \
+      #       -H "Accept: application/vnd.github+json" \
+      #       https://api.github.com/repos/$REPO/statuses/$SHA \
+      #       -d '{"state":"pending","context":"qual-check","description":"Qual workflow running"}' 
