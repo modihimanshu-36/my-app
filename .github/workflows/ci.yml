@@ -84,7 +84,7 @@ jobs:
                 "https://api.github.com/repos/$REPO/actions/runs?event=repository_dispatch&per_page=10")
         
               # Find the run matching our PR branch and SHA
-              run_id=$(echo "$run" | jq -r '.workflow_runs[] | select(.head_branch=="'"$HEAD_REF"'" and .head_sha=="'"$PR_SHA"'") | .id' | head -n1)
+              run_id=$(echo "$run" | jq -r '.workflow_runs[0].id')
               if [ -z "$run_id" ]; then
                 echo "No matching workflow run found yet. Waiting..."
                 sleep $SLEEP_SEC
