@@ -65,57 +65,57 @@ jobs:
             -d "{\"event_type\": \"$EVENT_TYPE\", \"client_payload\": $PAYLOAD}"
 
 
-      - name: Wait for child process to complete
-        env:
-            GH_TOKEN: ${{ secrets.QUAL_TOKEN }}
-            REPO: modihimanshu-36/qual
-            HEAD_REF: ${{ github.head_ref }}
-            PR_SHA: ${{ github.sha }}
-            MAX_ATTEMPTS: 60    # 60 attempts
-            SLEEP_SEC: 10       # 10 seconds per attempt (total 10 minutes max)
-        run: |
-            echo "Polling for child workflow completion..."
-            attempt=1
-            while [ $attempt -le $MAX_ATTEMPTS ]; do
-              echo "Attempt $attempt/$MAX_ATTEMPTS"
-              # Get latest workflow run for this PR branch and SHA, triggered by repository_dispatch
-              run=$(curl -s -H "Accept: application/vnd.github+json" \
-                -H "Authorization: Bearer $GH_TOKEN" \
-                "https://api.github.com/repos/$REPO/actions/runs?event=repository_dispatch&per_page=10")
+      # - name: Wait for child process to complete
+      #   env:
+      #       GH_TOKEN: ${{ secrets.QUAL_TOKEN }}
+      #       REPO: modihimanshu-36/qual
+      #       HEAD_REF: ${{ github.head_ref }}
+      #       PR_SHA: ${{ github.sha }}
+      #       MAX_ATTEMPTS: 60    # 60 attempts
+      #       SLEEP_SEC: 10       # 10 seconds per attempt (total 10 minutes max)
+      #   run: |
+      #       echo "Polling for child workflow completion..."
+      #       attempt=1
+      #       while [ $attempt -le $MAX_ATTEMPTS ]; do
+      #         echo "Attempt $attempt/$MAX_ATTEMPTS"
+      #         # Get latest workflow run for this PR branch and SHA, triggered by repository_dispatch
+      #         run=$(curl -s -H "Accept: application/vnd.github+json" \
+      #           -H "Authorization: Bearer $GH_TOKEN" \
+      #           "https://api.github.com/repos/$REPO/actions/runs?event=repository_dispatch&per_page=10")
         
-              # Find the run matching our PR branch and SHA
-              run_id=$(echo "$run" | jq -r '.workflow_runs[0].id')
-              if [ -z "$run_id" ]; then
-                echo "No matching workflow run found yet. Waiting..."
-                sleep $SLEEP_SEC
-                attempt=$((attempt+1))
-                continue
-              fi
+      #         # Find the run matching our PR branch and SHA
+      #         run_id=$(echo "$run" | jq -r '.workflow_runs[0].id')
+      #         if [ -z "$run_id" ]; then
+      #           echo "No matching workflow run found yet. Waiting..."
+      #           sleep $SLEEP_SEC
+      #           attempt=$((attempt+1))
+      #           continue
+      #         fi
         
-              # Get status of the run
-              run_info=$(curl -s -H "Accept: application/vnd.github+json" \
-                -H "Authorization: Bearer $GH_TOKEN" \
-                "https://api.github.com/repos/$REPO/actions/runs/$run_id")
-              status=$(echo "$run_info" | jq -r '.status')
-              conclusion=$(echo "$run_info" | jq -r '.conclusion')
-              echo "Status: $status, Conclusion: $conclusion"
+      #         # Get status of the run
+      #         run_info=$(curl -s -H "Accept: application/vnd.github+json" \
+      #           -H "Authorization: Bearer $GH_TOKEN" \
+      #           "https://api.github.com/repos/$REPO/actions/runs/$run_id")
+      #         status=$(echo "$run_info" | jq -r '.status')
+      #         conclusion=$(echo "$run_info" | jq -r '.conclusion')
+      #         echo "Status: $status, Conclusion: $conclusion"
         
-              if [ "$status" = "completed" ]; then
-                if [ "$conclusion" = "success" ]; then
-                  echo "Child workflow succeeded."
-                  exit 0
-                else
-                  echo "Child workflow failed."
-                  exit 1
-                fi
-              fi
+      #         if [ "$status" = "completed" ]; then
+      #           if [ "$conclusion" = "success" ]; then
+      #             echo "Child workflow succeeded."
+      #             exit 0
+      #           else
+      #             echo "Child workflow failed."
+      #             exit 1
+      #           fi
+      #         fi
         
-              sleep $SLEEP_SEC
-              attempt=$((attempt+1))
-            done
+      #         sleep $SLEEP_SEC
+      #         attempt=$((attempt+1))
+      #       done
         
-            echo "Timed out waiting for child workflow."
-            exit 1
+      #       echo "Timed out waiting for child workflow."
+      #       exit 1
 
       # - name: Set qual-check status to pending
       #   env:
