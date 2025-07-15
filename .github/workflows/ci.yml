@@ -44,17 +44,87 @@ jobs:
       - name: Install dependencies and run tests
         run: mvn clean verify
 
-      - name: Trigger qual repo tests
-        if: success()  # Only run if previous steps succeeded
-        uses: peter-evans/repository-dispatch@v3
-        with:
-          token: ${{ secrets.QUAL_TOKEN }}
-          repository: modihimanshu-36/qual         # <--- CHANGE THIS!
-          event-type: run-qual-tests
-          client-payload: |
+      - name: Trigger qual repo tests (via GitHub API)
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.QUAL_TOKEN }}
+          REPO: modihimanshu-36/qual
+          EVENT_TYPE: run-qual-tests
+          PAYLOAD: |
             {
               "pr_branch": "${{ github.head_ref }}",
               "repo": "${{ github.repository }}",
               "pr_sha": "${{ github.sha }}",
               "feature_tag": "feature:my-app"
             }
+        run: |
+          curl -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            https://api.github.com/repos/$REPO/dispatches \
+            -d "{\"event_type\": \"$EVENT_TYPE\", \"client_payload\": $PAYLOAD}"
+
+
+      # - name: Wait for child process to complete
+      #   env:
+      #       GH_TOKEN: ${{ secrets.QUAL_TOKEN }}
+      #       REPO: modihimanshu-36/qual
+      #       HEAD_REF: ${{ github.head_ref }}
+      #       PR_SHA: ${{ github.sha }}
+      #       MAX_ATTEMPTS: 60    # 60 attempts
+      #       SLEEP_SEC: 10       # 10 seconds per attempt (total 10 minutes max)
+      #   run: |
+      #       echo "Polling for child workflow completion..."
+      #       attempt=1
+      #       while [ $attempt -le $MAX_ATTEMPTS ]; do
+      #         echo "Attempt $attempt/$MAX_ATTEMPTS"
+      #         # Get latest workflow run for this PR branch and SHA, triggered by repository_dispatch
+      #         run=$(curl -s -H "Accept: application/vnd.github+json" \
+      #           -H "Authorization: Bearer $GH_TOKEN" \
+      #           "https://api.github.com/repos/$REPO/actions/runs?event=repository_dispatch&per_page=10")
+        
+      #         # Find the run matching our PR branch and SHA
+      #         run_id=$(echo "$run" | jq -r '.workflow_runs[0].id')
+      #         if [ -z "$run_id" ]; then
+      #           echo "No matching workflow run found yet. Waiting..."
+      #           sleep $SLEEP_SEC
+      #           attempt=$((attempt+1))
+      #           continue
+      #         fi
+        
+      #         # Get status of the run
+      #         run_info=$(curl -s -H "Accept: application/vnd.github+json" \
+      #           -H "Authorization: Bearer $GH_TOKEN" \
+      #           "https://api.github.com/repos/$REPO/actions/runs/$run_id")
+      #         status=$(echo "$run_info" | jq -r '.status')
+      #         conclusion=$(echo "$run_info" | jq -r '.conclusion')
+      #         echo "Status: $status, Conclusion: $conclusion"
+        
+      #         if [ "$status" = "completed" ]; then
+      #           if [ "$conclusion" = "success" ]; then
+      #             echo "Child workflow succeeded."
+      #             exit 0
+      #           else
+      #             echo "Child workflow failed."
+      #             exit 1
+      #           fi
+      #         fi
+        
+      #         sleep $SLEEP_SEC
+      #         attempt=$((attempt+1))
+      #       done
+        
+      #       echo "Timed out waiting for child workflow."
+      #       exit 1
+
+      # - name: Set qual-check status to pending
+      #   env:
+      #     GH_TOKEN: ${{ secrets.STATUS_TOKEN }}  # The same PAT with commit status permission on my-app
+      #     SHA: ${{ github.event.pull_request.head.sha }}
+      #     REPO: modihimanshu-36/my-app
+      #   run: |
+      #     curl -X POST \
+      #       -H "Authorization: Bearer $GH_TOKEN" \
+      #       -H "Accept: application/vnd.github+json" \
+      #       https://api.github.com/repos/$REPO/statuses/$SHA \
+      #       -d '{"state":"pending","context":"qual-check","description":"Qual workflow running"}' 

@@ -2,6 +2,7 @@
 
 export class Calculator {
     static add(a, b) {
+        console.log('somethin fdgrd  added')
         return a + b;
     }
 
