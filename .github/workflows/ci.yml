@@ -58,7 +58,7 @@ jobs:
               "feature_tag": "feature:my-app"
             }
         run: |
-          echo "new"
+          echo "new This"
           curl -X POST \
             -H "Accept: application/vnd.github+json" \
             -H "Authorization: Bearer $GH_TOKEN" \
